@@ -1155,7 +1155,7 @@ function showResult(win,elapsed,diff){
     }
 
     document.getElementById('rSub').textContent=win
-      ?'Show this coupon at the counter to redeem your ₹'+prizeAmt+' reward!'
+      ?'Show this coupon at the counter & get an exclusive discount on your Mobile or Laptop purchase!'
       :(triesLeft>0?'Next try: \u00b1'+(WIN_MS_PER_TRY[Math.min(attemptCount,2)]/1000).toFixed(2)+'s window — anticipate, not react!':'Better luck next time! Visit us again.');
 
     const tryBtn=document.getElementById('tryAgainBtn');
