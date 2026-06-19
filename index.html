@@ -379,6 +379,27 @@ body::after{
 .lose-msg{font-size:15px;color:var(--sub);text-align:center;font-weight:500;
   margin-top:10px;max-width:340px;line-height:1.55;animation:fadeUp .4s ease .28s both}
 
+.pin-overlay{position:fixed;inset:0;z-index:9999;background:#fff;
+  display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+.pin-overlay.hidden{display:none}
+.pin-box{text-align:center;width:320px;padding:20px}
+.pin-logo-img{width:72px;height:72px;border-radius:50%;margin-bottom:10px}
+.pin-brand{font-size:22px;font-weight:800;letter-spacing:2px;color:var(--acc);margin-bottom:4px}
+.pin-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pin-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.pin-dots{display:flex;gap:18px;justify-content:center;margin-bottom:8px}
+.pd{width:18px;height:18px;border-radius:50%;border:2px solid var(--acc);transition:background .12s}
+.pd.filled{background:var(--acc)}
+.pin-error{height:22px;font-size:13px;color:var(--red);font-weight:600;margin-bottom:12px}
+.pin-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;justify-content:center;margin-top:8px}
+.pin-pad button{width:80px;height:80px;border-radius:50%;border:1.5px solid rgba(233,39,81,.25);
+  background:#fff;font-size:26px;font-weight:600;color:var(--text);
+  cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.pin-pad button:active{background:var(--acc);color:#fff;transform:scale(.9);border-color:var(--acc)}
+.del-btn{font-size:20px!important}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.shake{animation:shake .4s ease}
+
 /* ── RESPONSIVE ───────────────── */
 @media(max-width:500px){
   .live-clock{font-size:52px;letter-spacing:3px}
@@ -394,6 +415,33 @@ body::after{
 <body>
 
 <div id="orbs" aria-hidden="true"></div>
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box" id="pinBox">
+    <img class="pin-logo-img" id="pinLogoImg" alt="GREST">
+    <div class="pin-brand">GREST</div>
+    <div class="pin-title">Staff Access</div>
+    <div class="pin-sub">Enter PIN to unlock for customer</div>
+    <div class="pin-dots" id="pinDots">
+      <span class="pd"></span><span class="pd"></span>
+      <span class="pd"></span><span class="pd"></span>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-pad">
+      <button onclick="pinKey('1')">1</button>
+      <button onclick="pinKey('2')">2</button>
+      <button onclick="pinKey('3')">3</button>
+      <button onclick="pinKey('4')">4</button>
+      <button onclick="pinKey('5')">5</button>
+      <button onclick="pinKey('6')">6</button>
+      <button onclick="pinKey('7')">7</button>
+      <button onclick="pinKey('8')">8</button>
+      <button onclick="pinKey('9')">9</button>
+      <span></span>
+      <button onclick="pinKey('0')">0</button>
+      <button class="del-btn" onclick="pinKey('del')">⌫</button>
+    </div>
+  </div>
+</div>
 <div id="flash"></div>
 
 <!-- ═══ PAGE 1 ═══ -->
@@ -581,6 +629,7 @@ body::after{
 /* ── CONFIG — paste your API URLs here ─────────────── */
 const CONFIG={
   storeName:'Store 1',  // change this per kiosk
+  staffPin:'1234',       // change your PIN here
   sheetUrl:'https://script.google.com/macros/s/AKfycbznUZXTu58S9VwPDprfBU2fODrEkQvn1ZFrb6DyNjFYi76FpF_HqV1asP1S0JvNfaYt2A/exec',   // Google Apps Script Web App URL
   mongoUrl:'',   // MongoDB Atlas Data API insertOne URL
   mongoKey:'',   // MongoDB API Key
@@ -704,7 +753,7 @@ function submitForm(){
 
 document.addEventListener('DOMContentLoaded',()=>{
   const src=(document.querySelector('.ci-logo')||{}).src;
-  if(src) document.querySelectorAll('.topbar-icon').forEach(el=>el.src=src);
+  if(src){document.querySelectorAll('.topbar-icon').forEach(el=>el.src=src);const pi=document.getElementById('pinLogoImg');if(pi)pi.src=src;}
   initRipples();
   FIELDS.forEach(fid=>{
     const el=document.getElementById(fid); if(!el) return;
@@ -712,6 +761,37 @@ document.addEventListener('DOMContentLoaded',()=>{
     el.addEventListener('input',()=>{if(done[fid]===false) validateOne(fid);});
   });
 });
+
+/* ── PIN LOCK ── */
+let pinEntry='';
+function pinKey(k){
+  if(k==='del'){pinEntry=pinEntry.slice(0,-1);}
+  else if(pinEntry.length<4){
+    pinEntry+=k;
+    if(pinEntry.length===4) setTimeout(checkPin,140);
+  }
+  updatePinDots();
+}
+function updatePinDots(){
+  document.querySelectorAll('.pd').forEach((d,i)=>d.classList.toggle('filled',i<pinEntry.length));
+}
+function checkPin(){
+  if(pinEntry===String(CONFIG.staffPin)){
+    document.getElementById('pinOverlay').classList.add('hidden');
+    pinEntry=''; updatePinDots();
+  } else {
+    const box=document.getElementById('pinBox');
+    box.classList.add('shake');
+    setTimeout(()=>{box.classList.remove('shake');pinEntry='';updatePinDots();},420);
+    document.getElementById('pinError').textContent='Wrong PIN — try again';
+    setTimeout(()=>document.getElementById('pinError').textContent='',1400);
+  }
+}
+function showPinOverlay(){
+  pinEntry=''; updatePinDots();
+  document.getElementById('pinError').textContent='';
+  document.getElementById('pinOverlay').classList.remove('hidden');
+}
 
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
@@ -836,7 +916,7 @@ function resetForNewPlayer(){
     if(sEl){sEl.textContent='';sEl.className='fstatus';}
     done[f]=false;
   });
-  updateBar(); attemptCount=0; playerData={}; goTo(1);
+  updateBar(); attemptCount=0; playerData={}; goTo(1); showPinOverlay();
 }
 
 /* ── RESULT ── */
