@@ -309,7 +309,7 @@ body::after{
 
 /* ── Timing result chip ── */
 .timing-chip{font-size:14px;color:var(--muted);text-align:center;margin-top:10px;animation:fadeUp .4s ease .28s both;font-weight:500}
-.timing-chip.win-t{color:#22c55e;font-weight:700}
+.timing-chip.win-t{color:var(--acc);font-weight:700}
 .timing-chip strong{color:var(--red);font-weight:800}
 
 /* ═══════════════ RESULT OVERLAY ═══════════════ */
@@ -327,12 +327,12 @@ body::after{
 @keyframes popIn{from{transform:scale(0) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
 
 .r-title{font-size:44px;font-weight:900;letter-spacing:4px;animation:fadeUp .4s ease .1s both}
-.r-title.win {color:var(--green);text-shadow:0 0 28px rgba(34,197,94,.65)}
+.r-title.win {color:var(--acc);text-shadow:0 0 28px rgba(233,39,81,.4)}
 .r-title.lose{color:var(--red);  text-shadow:0 0 24px rgba(239,68,68,.55)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
 .coupon-card{
-  background:rgba(34,197,94,.1);border:2px solid rgba(34,197,94,.42);
+  background:rgba(233,39,81,.06);border:2px solid rgba(233,39,81,.3);
   border-radius:24px;padding:28px 60px;text-align:center;
   animation:fadeUp .4s ease .2s both;
 }
@@ -1113,7 +1113,7 @@ function initScratch(canvas){
 
 /* ── RESULT ── */
 function showResult(win,elapsed,diff){
-  if(win){flash('rgba(34,197,94,.5)',450);setTimeout(confetti,350);}
+  if(win){flash('rgba(233,39,81,.35)',450);setTimeout(confetti,350);}
   else flash('rgba(239,68,68,.55)',380);
 
   const coupon=win?genCoupon(attemptCount):'';
