@@ -650,7 +650,6 @@ body::after{
 
 /* ── CONFIG — paste your API URLs here ─────────────── */
 const CONFIG={
-  staffPin:'1234',       // change your PIN here
   sheetUrl:'https://script.google.com/macros/s/AKfycbznUZXTu58S9VwPDprfBU2fODrEkQvn1ZFrb6DyNjFYi76FpF_HqV1asP1S0JvNfaYt2A/exec',   // Google Apps Script Web App URL
   mongoUrl:'',   // MongoDB Atlas Data API insertOne URL
   mongoKey:'',   // MongoDB API Key
@@ -785,6 +784,14 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 /* ── PIN LOCK ── */
 const STORES=['MG Road','CTST Road','Laxmi Nagar','Dwarka','Faridabad','INA'];
+const STORE_PINS={
+  'MG Road':'6822',
+  'CTST Road':'7114',
+  'Laxmi Nagar':'4634',
+  'Dwarka':'6566',
+  'Faridabad':'1437',
+  'INA':'4357',
+};
 let pinEntry='', selectedStore='';
 
 (function buildStoreGrid(){
@@ -823,7 +830,7 @@ function updatePinDots(){
   document.querySelectorAll('.pd').forEach((d,i)=>d.classList.toggle('filled',i<pinEntry.length));
 }
 function checkPin(){
-  if(pinEntry===String(CONFIG.staffPin)){
+  if(pinEntry===STORE_PINS[selectedStore]){
     document.getElementById('pinOverlay').classList.add('hidden');
     pinEntry=''; updatePinDots();
   } else {
