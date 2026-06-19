@@ -623,7 +623,7 @@ body::after{
       <div class="target-val">
         <span class="t-s" id="tS">--</span><span class="t-dot">.</span><span class="t-ms" id="tMs">--</span><span class="t-unit">s</span>
       </div>
-      <div class="target-hint">Hit within <strong>±0.5s</strong> to win</div>
+      <div class="target-hint">Hit within <strong>±0.1s</strong> to win</div>
     </div>
 
     <!-- Approach hint -->
@@ -902,7 +902,7 @@ async function saveData(win,diff,coupon){
 
 /* ── GAME ── */
 let animFrame=null,gameOver=false,startTime=null,targetMs=null;
-const WIN_MS=500,MAX_MS=15000,AUTO_MISS=600;
+const WIN_MS=100,MAX_MS=15000,AUTO_MISS=300;
 
 function p2(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
 function p2cs(n){return String(Math.max(0,Math.floor(n/10)%100)).padStart(2,'0')}
