@@ -942,7 +942,7 @@ async function saveData(win,diff,coupon){
 
 /* ── GAME ── */
 let animFrame=null,gameOver=false,startTime=null,targetMs=null;
-const WIN_MS=100,MAX_MS=15000,AUTO_MISS=300;
+const WIN_MS_PER_TRY=[100,200,250],AUTO_MISS_PER_TRY=[300,450,600],MAX_MS=15000;
 
 function p2(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
 function p2cs(n){return String(Math.max(0,Math.floor(n/10)%100)).padStart(2,'0')}
@@ -989,12 +989,12 @@ function gameLoop(){
     atxt.className='approach-txt critical';atxt.textContent='🔥 Any moment now...';
     card.className='target-card u2';
     btn.className='press-circle rhost fast';ring.className='press-ring fast';
-  } else if(diff>=-WIN_MS){
+  } else if(diff>=-WIN_MS_PER_TRY[Math.min(attemptCount,2)]){
     atxt.className='approach-txt now-txt';atxt.textContent='';
     card.className='target-card now';
     btn.className='press-circle rhost vfast';ring.className='press-ring fast';
   } else {
-    if(elapsed>targetMs+AUTO_MISS&&!gameOver){
+    if(elapsed>targetMs+AUTO_MISS_PER_TRY[Math.min(attemptCount,2)]&&!gameOver){
       gameOver=true;showResult(false,elapsed,elapsed-targetMs);return;
     }
     atxt.className='approach-txt critical';atxt.textContent='❌ Too slow!';
@@ -1009,7 +1009,7 @@ function handlePress(){
   attemptCount++;
   const elapsed=performance.now()-startTime;
   const diff=elapsed-targetMs;
-  const win=Math.abs(diff)<=WIN_MS;
+  const win=Math.abs(diff)<=WIN_MS_PER_TRY[Math.min(attemptCount-1,2)];
   const btn=document.getElementById('pressBtn');
   btn.style.transform='scale(.86)';
   setTimeout(()=>{btn.style.transform='scale(1.05)';},120);
@@ -1156,7 +1156,7 @@ function showResult(win,elapsed,diff){
 
     document.getElementById('rSub').textContent=win
       ?'Show this coupon at the counter to redeem your ₹'+prizeAmt+' reward!'
-      :(triesLeft>0?'Only ±0.1s window — anticipate, not react!':'Better luck next time! Visit us again.');
+      :(triesLeft>0?'Next try: \u00b1'+(WIN_MS_PER_TRY[Math.min(attemptCount,2)]/1000).toFixed(2)+'s window — anticipate, not react!':'Better luck next time! Visit us again.');
 
     const tryBtn=document.getElementById('tryAgainBtn');
     if(tryBtn) tryBtn.style.display=(!win&&triesLeft>0)?'inline-flex':'none';
