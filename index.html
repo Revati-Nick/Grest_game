@@ -419,6 +419,19 @@ body::after{
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
 .shake{animation:shake .4s ease}
 
+.scratch-wrap{position:relative;width:280px;margin:0 auto 12px}
+.scratch-reveal{
+  width:280px;box-sizing:border-box;
+  background:linear-gradient(135deg,#fff5f7,#fff);
+  border:2.5px dashed var(--acc);border-radius:20px;
+  padding:22px 16px;text-align:center;
+}
+.sc-label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+.sc-code{font-size:34px;font-weight:900;letter-spacing:5px;color:var(--acc);font-family:monospace}
+.sc-amt{font-size:16px;font-weight:700;color:var(--sub);margin-top:4px}
+.scratch-canvas{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px;cursor:crosshair;touch-action:none}
+.sc-hint{font-size:13px;color:var(--muted);text-align:center;margin-top:8px;font-weight:500}
+
 /* ── RESPONSIVE ───────────────── */
 @media(max-width:500px){
   .live-clock{font-size:52px;letter-spacing:3px}
@@ -967,11 +980,7 @@ function handlePress(){
 }
 
 /* ── COUPON ── */
-function genCoupon(){
-  const p='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c='WIN';
-  for(let i=0;i<3;i++) c+=p[Math.floor(Math.random()*p.length)];
-  return c;
-}
+function genCoupon(){ return 'GREST500'; }
 
 /* ── AUTO RESET ── */
 let autoResetTimer=null;
@@ -996,6 +1005,67 @@ function resetForNewPlayer(){
     done[f]=false;
   });
   updateBar(); attemptCount=0; playerData={}; goTo(1); showPinOverlay();
+}
+
+/* ── SCRATCH CARD ── */
+function initScratch(canvas){
+  const reveal=canvas.previousElementSibling;
+  const r=reveal.getBoundingClientRect();
+  canvas.width=r.width; canvas.height=r.height;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+
+  // Draw silver scratch layer
+  const g=ctx.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,'#d4d4d4');g.addColorStop(.5,'#f0f0f0');g.addColorStop(1,'#b8b8b8');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  const rad=20;
+  ctx.moveTo(rad,0);ctx.lineTo(w-rad,0);ctx.quadraticCurveTo(w,0,w,rad);
+  ctx.lineTo(w,h-rad);ctx.quadraticCurveTo(w,h,w-rad,h);
+  ctx.lineTo(rad,h);ctx.quadraticCurveTo(0,h,0,h-rad);
+  ctx.lineTo(0,rad);ctx.quadraticCurveTo(0,0,rad,0);ctx.closePath();
+  ctx.fill();
+
+  // Scratch text on layer
+  ctx.fillStyle='rgba(80,80,80,.55)';
+  ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🎁  Scratch here to reveal!',w/2,h/2-8);
+  ctx.font='12px sans-serif';ctx.fillStyle='rgba(80,80,80,.4)';
+  ctx.fillText('Use your finger',w/2,h/2+14);
+
+  let painting=false;
+  function pos(e){
+    const rc=canvas.getBoundingClientRect();
+    const t=e.touches?e.touches[0]:e;
+    return{x:(t.clientX-rc.left)*(canvas.width/rc.width),
+           y:(t.clientY-rc.top)*(canvas.height/rc.height)};
+  }
+  function erase(e){
+    if(!painting) return; e.preventDefault();
+    const p=pos(e);
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath();ctx.arc(p.x,p.y,32,0,Math.PI*2);ctx.fill();
+    checkDone();
+  }
+  function checkDone(){
+    const d=ctx.getImageData(0,0,w,h).data;
+    let t=0;
+    for(let i=3;i<d.length;i+=4) if(d[i]<128) t++;
+    if(t/(w*h)>.45){
+      ctx.clearRect(0,0,w,h);
+      canvas.style.pointerEvents='none';
+      const hint=canvas.parentElement.nextElementSibling;
+      if(hint&&hint.classList.contains('sc-hint'))
+        hint.textContent='🎉 Show this code at the counter!';
+    }
+  }
+  canvas.addEventListener('mousedown',e=>{painting=true;erase(e);});
+  canvas.addEventListener('mousemove',erase);
+  canvas.addEventListener('mouseup',()=>painting=false);
+  canvas.addEventListener('touchstart',e=>{painting=true;erase(e);},{passive:false});
+  canvas.addEventListener('touchmove',erase,{passive:false});
+  canvas.addEventListener('touchend',()=>painting=false);
 }
 
 /* ── RESULT ── */
