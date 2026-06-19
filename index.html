@@ -421,7 +421,7 @@ body::after{
 
 .scratch-wrap{position:relative;width:280px;margin:0 auto 12px}
 .scratch-reveal{
-  width:280px;box-sizing:border-box;
+  width:280px;min-height:120px;box-sizing:border-box;
   background:linear-gradient(135deg,#fff5f7,#fff);
   border:2.5px dashed var(--acc);border-radius:20px;
   padding:22px 16px;text-align:center;
@@ -1010,14 +1010,14 @@ function resetForNewPlayer(){
 /* ── SCRATCH CARD ── */
 function initScratch(canvas){
   const reveal=canvas.previousElementSibling;
-  const r=reveal.getBoundingClientRect();
-  canvas.width=r.width; canvas.height=r.height;
+  const w=reveal.offsetWidth||280;
+  const h=reveal.offsetHeight||120;
+  canvas.width=w; canvas.height=h;
   const ctx=canvas.getContext('2d');
-  const w=canvas.width,h=canvas.height;
 
-  // Draw silver scratch layer
+  // Silver scratch layer
   const g=ctx.createLinearGradient(0,0,w,h);
-  g.addColorStop(0,'#d4d4d4');g.addColorStop(.5,'#f0f0f0');g.addColorStop(1,'#b8b8b8');
+  g.addColorStop(0,'#c8c8c8');g.addColorStop(.5,'#efefef');g.addColorStop(1,'#b0b0b0');
   ctx.fillStyle=g;
   ctx.beginPath();
   const rad=20;
@@ -1027,25 +1027,27 @@ function initScratch(canvas){
   ctx.lineTo(0,rad);ctx.quadraticCurveTo(0,0,rad,0);ctx.closePath();
   ctx.fill();
 
-  // Scratch text on layer
-  ctx.fillStyle='rgba(80,80,80,.55)';
+  // Label on scratch layer
+  ctx.fillStyle='rgba(60,60,60,.6)';
   ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('🎁  Scratch here to reveal!',w/2,h/2-8);
-  ctx.font='12px sans-serif';ctx.fillStyle='rgba(80,80,80,.4)';
-  ctx.fillText('Use your finger',w/2,h/2+14);
+  ctx.fillText('🎁  Scratch to reveal!',w/2,h/2-10);
+  ctx.font='12px sans-serif';ctx.fillStyle='rgba(60,60,60,.45)';
+  ctx.fillText('Use your finger',w/2,h/2+12);
 
   let painting=false;
   function pos(e){
     const rc=canvas.getBoundingClientRect();
     const t=e.touches?e.touches[0]:e;
-    return{x:(t.clientX-rc.left)*(canvas.width/rc.width),
-           y:(t.clientY-rc.top)*(canvas.height/rc.height)};
+    return{x:(t.clientX-rc.left)*(w/rc.width),
+           y:(t.clientY-rc.top)*(h/rc.height)};
   }
   function erase(e){
-    if(!painting) return; e.preventDefault();
+    if(!painting) return;
+    e.preventDefault();
     const p=pos(e);
     ctx.globalCompositeOperation='destination-out';
-    ctx.beginPath();ctx.arc(p.x,p.y,32,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,1)';
+    ctx.beginPath();ctx.arc(p.x,p.y,36,0,Math.PI*2);ctx.fill();
     checkDone();
   }
   function checkDone(){
@@ -1063,6 +1065,7 @@ function initScratch(canvas){
   canvas.addEventListener('mousedown',e=>{painting=true;erase(e);});
   canvas.addEventListener('mousemove',erase);
   canvas.addEventListener('mouseup',()=>painting=false);
+  canvas.addEventListener('mouseleave',()=>painting=false);
   canvas.addEventListener('touchstart',e=>{painting=true;erase(e);},{passive:false});
   canvas.addEventListener('touchmove',erase,{passive:false});
   canvas.addEventListener('touchend',()=>painting=false);
