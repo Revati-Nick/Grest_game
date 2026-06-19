@@ -717,7 +717,7 @@ async function saveData(win,diff,coupon){
   const payload={...playerData,result:win?'win':'lose',timingDiff:diff,
     couponCode:coupon||'',attempts:attemptCount,timestamp:new Date().toISOString()};
   if(CONFIG.sheetUrl)
-    fetch(CONFIG.sheetUrl,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)})
+    fetch(CONFIG.sheetUrl+'?data='+encodeURIComponent(JSON.stringify(payload)),{mode:'no-cors'})
       .catch(e=>console.warn('Sheets:',e));
   if(CONFIG.mongoUrl&&CONFIG.mongoKey)
     fetch(CONFIG.mongoUrl,{method:'POST',
