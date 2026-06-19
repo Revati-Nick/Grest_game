@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
   const payload={...playerData,result:win?'win':'lose',timingDiff:diff,
-    couponCode:coupon||'',attempts:attemptCount,timestamp:new Date().toISOString()};
+    couponCode:coupon||'',attempts:attemptCount,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
   if(CONFIG.sheetUrl)
     fetch(CONFIG.sheetUrl+'?data='+encodeURIComponent(JSON.stringify(payload)),{mode:'no-cors'})
       .catch(e=>console.warn('Sheets:',e));
