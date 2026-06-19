@@ -380,18 +380,30 @@ body::after{
   margin-top:10px;max-width:340px;line-height:1.55;animation:fadeUp .4s ease .28s both}
 
 .pin-overlay{position:fixed;inset:0;z-index:9999;background:#fff;
-  display:flex;align-items:center;justify-content:center;transition:opacity .3s}
+  display:flex;align-items:center;justify-content:center}
 .pin-overlay.hidden{display:none}
-.pin-box{text-align:center;width:320px;padding:20px}
-.pin-logo-img{width:72px;height:72px;border-radius:50%;margin-bottom:10px}
-.pin-brand{font-size:22px;font-weight:800;letter-spacing:2px;color:var(--acc);margin-bottom:4px}
-.pin-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
-.pin-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.pin-box{text-align:center;width:360px;padding:24px;position:relative}
+.pin-hidden{display:none}
+.pin-logo-img{width:68px;height:68px;border-radius:50%;margin-bottom:8px}
+.pin-brand{font-size:20px;font-weight:800;letter-spacing:2px;color:var(--acc);margin-bottom:2px}
+.pin-title{font-size:19px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pin-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.pin-store-tag{display:inline-block;padding:5px 18px;border-radius:100px;
+  background:rgba(233,39,81,.1);color:var(--acc);font-size:14px;font-weight:700;
+  margin-bottom:16px}
+.pin-back-btn{position:absolute;top:0;left:0;background:none;border:none;
+  color:var(--muted);font-size:15px;font-weight:600;cursor:pointer;padding:8px 4px}
+.pin-back-btn:active{color:var(--acc)}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 4px}
+.store-btn{padding:18px 10px;border-radius:16px;border:2px solid rgba(233,39,81,.2);
+  background:#fff;font-size:15px;font-weight:700;color:var(--text);
+  cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;line-height:1.3}
+.store-btn:active{background:var(--acc);color:#fff;border-color:var(--acc);transform:scale(.96)}
 .pin-dots{display:flex;gap:18px;justify-content:center;margin-bottom:8px}
 .pd{width:18px;height:18px;border-radius:50%;border:2px solid var(--acc);transition:background .12s}
 .pd.filled{background:var(--acc)}
-.pin-error{height:22px;font-size:13px;color:var(--red);font-weight:600;margin-bottom:12px}
-.pin-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;justify-content:center;margin-top:8px}
+.pin-error{height:22px;font-size:13px;color:var(--red);font-weight:600;margin-bottom:8px}
+.pin-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;justify-content:center;margin-top:6px}
 .pin-pad button{width:80px;height:80px;border-radius:50%;border:1.5px solid rgba(233,39,81,.25);
   background:#fff;font-size:26px;font-weight:600;color:var(--text);
   cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
@@ -416,11 +428,21 @@ body::after{
 
 <div id="orbs" aria-hidden="true"></div>
 <div class="pin-overlay" id="pinOverlay">
-  <div class="pin-box" id="pinBox">
-    <img class="pin-logo-img" id="pinLogoImg" alt="GREST">
+  <!-- Step 1: Store selection -->
+  <div class="pin-box" id="storeStep">
+    <img class="pin-logo-img pin-logo-all" alt="GREST">
     <div class="pin-brand">GREST</div>
-    <div class="pin-title">Staff Access</div>
-    <div class="pin-sub">Enter PIN to unlock for customer</div>
+    <div class="pin-title">Select Your Store</div>
+    <div class="pin-sub">Tap the store where you are playing</div>
+    <div class="store-grid" id="storeGrid"></div>
+  </div>
+  <!-- Step 2: PIN entry -->
+  <div class="pin-box pin-hidden" id="pinStep">
+    <button class="pin-back-btn" onclick="backToStore()">&#8592; Back</button>
+    <img class="pin-logo-img pin-logo-all" alt="GREST">
+    <div class="pin-brand">GREST</div>
+    <div class="pin-store-tag" id="pinStoreTag"></div>
+    <div class="pin-title">Enter Staff PIN</div>
     <div class="pin-dots" id="pinDots">
       <span class="pd"></span><span class="pd"></span>
       <span class="pd"></span><span class="pd"></span>
@@ -628,7 +650,6 @@ body::after{
 
 /* ── CONFIG — paste your API URLs here ─────────────── */
 const CONFIG={
-  storeName:'Store 1',  // change this per kiosk
   staffPin:'1234',       // change your PIN here
   sheetUrl:'https://script.google.com/macros/s/AKfycbznUZXTu58S9VwPDprfBU2fODrEkQvn1ZFrb6DyNjFYi76FpF_HqV1asP1S0JvNfaYt2A/exec',   // Google Apps Script Web App URL
   mongoUrl:'',   // MongoDB Atlas Data API insertOne URL
@@ -753,7 +774,7 @@ function submitForm(){
 
 document.addEventListener('DOMContentLoaded',()=>{
   const src=(document.querySelector('.ci-logo')||{}).src;
-  if(src){document.querySelectorAll('.topbar-icon').forEach(el=>el.src=src);const pi=document.getElementById('pinLogoImg');if(pi)pi.src=src;}
+  if(src){document.querySelectorAll('.topbar-icon,.pin-logo-all').forEach(el=>el.src=src);}
   initRipples();
   FIELDS.forEach(fid=>{
     const el=document.getElementById(fid); if(!el) return;
@@ -763,7 +784,33 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 /* ── PIN LOCK ── */
-let pinEntry='';
+const STORES=['MG Road','CTST Road','Laxmi Nagar','Dwarka','Faridabad','INA'];
+let pinEntry='', selectedStore='';
+
+(function buildStoreGrid(){
+  const g=document.getElementById('storeGrid');
+  if(!g) return;
+  STORES.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='store-btn'; b.textContent=s;
+    b.onclick=()=>selectStore(s);
+    g.appendChild(b);
+  });
+})();
+
+function selectStore(name){
+  selectedStore=name;
+  document.getElementById('pinStoreTag').textContent=name;
+  document.getElementById('storeStep').classList.add('pin-hidden');
+  document.getElementById('pinStep').classList.remove('pin-hidden');
+  pinEntry=''; updatePinDots();
+  document.getElementById('pinError').textContent='';
+}
+function backToStore(){
+  document.getElementById('pinStep').classList.add('pin-hidden');
+  document.getElementById('storeStep').classList.remove('pin-hidden');
+  pinEntry=''; updatePinDots();
+}
 function pinKey(k){
   if(k==='del'){pinEntry=pinEntry.slice(0,-1);}
   else if(pinEntry.length<4){
@@ -780,22 +827,24 @@ function checkPin(){
     document.getElementById('pinOverlay').classList.add('hidden');
     pinEntry=''; updatePinDots();
   } else {
-    const box=document.getElementById('pinBox');
-    box.classList.add('shake');
-    setTimeout(()=>{box.classList.remove('shake');pinEntry='';updatePinDots();},420);
+    const step=document.getElementById('pinStep');
+    step.classList.add('shake');
+    setTimeout(()=>{step.classList.remove('shake');pinEntry='';updatePinDots();},420);
     document.getElementById('pinError').textContent='Wrong PIN — try again';
     setTimeout(()=>document.getElementById('pinError').textContent='',1400);
   }
 }
 function showPinOverlay(){
-  pinEntry=''; updatePinDots();
+  pinEntry=''; selectedStore=''; updatePinDots();
   document.getElementById('pinError').textContent='';
+  document.getElementById('pinStep').classList.add('pin-hidden');
+  document.getElementById('storeStep').classList.remove('pin-hidden');
   document.getElementById('pinOverlay').classList.remove('hidden');
 }
 
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
-  const payload={...playerData,store:CONFIG.storeName,result:win?'win':'lose',timingDiff:diff,
+  const payload={...playerData,store:selectedStore,result:win?'win':'lose',timingDiff:diff,
     couponCode:coupon||'',attempts:attemptCount,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
   if(CONFIG.sheetUrl)
     fetch(CONFIG.sheetUrl+'?data='+encodeURIComponent(JSON.stringify(payload)),{mode:'no-cors'})
