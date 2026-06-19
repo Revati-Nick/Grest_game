@@ -1172,7 +1172,7 @@ function showResult(win,elapsed,diff){
 
     document.getElementById('rSub').textContent=win
       ?'Show this coupon at the counter to redeem your ₹'+prizeAmt+' reward!'
-      :(triesLeft>0?'Only ±0.1s window — anticipate, don't react!':'Better luck next time! Visit us again.');
+      :(triesLeft>0?'Only ±0.1s window — anticipate, not react!':'Better luck next time! Visit us again.');
 
     const tryBtn=document.getElementById('tryAgainBtn');
     if(tryBtn) tryBtn.style.display=(!win&&triesLeft>0)?'inline-flex':'none';
