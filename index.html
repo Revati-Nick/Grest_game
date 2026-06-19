@@ -518,7 +518,7 @@ body::after{
     <!-- Stopwatch -->
     <div class="sw-wrap">
       <div class="sw-display">
-        <span class="sw-s" id="swS">00</span><span class="sw-dot">.</span><span class="sw-ms" id="swMs">000</span>
+        <span class="sw-s" id="swS">00</span><span class="sw-dot">.</span><span class="sw-ms" id="swMs">00</span>
       </div>
       <div class="sw-sub">seconds elapsed</div>
     </div>
@@ -527,9 +527,9 @@ body::after{
     <div class="target-card" id="targetCard">
       <div class="target-lbl">Stop the clock at</div>
       <div class="target-val">
-        <span class="t-s" id="tS">--</span><span class="t-dot">.</span><span class="t-ms" id="tMs">---</span><span class="t-unit">s</span>
+        <span class="t-s" id="tS">--</span><span class="t-dot">.</span><span class="t-ms" id="tMs">--</span><span class="t-unit">s</span>
       </div>
-      <div class="target-hint">Hit within <strong>±30ms</strong> to win</div>
+      <div class="target-hint">Hit within <strong>±0.5s</strong> to win</div>
     </div>
 
     <!-- Approach hint -->
@@ -580,6 +580,7 @@ body::after{
 
 /* ── CONFIG — paste your API URLs here ─────────────── */
 const CONFIG={
+  storeName:'Store 1',  // change this per kiosk
   sheetUrl:'https://script.google.com/macros/s/AKfycbznUZXTu58S9VwPDprfBU2fODrEkQvn1ZFrb6DyNjFYi76FpF_HqV1asP1S0JvNfaYt2A/exec',   // Google Apps Script Web App URL
   mongoUrl:'',   // MongoDB Atlas Data API insertOne URL
   mongoKey:'',   // MongoDB API Key
@@ -714,7 +715,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
-  const payload={...playerData,result:win?'win':'lose',timingDiff:diff,
+  const payload={...playerData,store:CONFIG.storeName,result:win?'win':'lose',timingDiff:diff,
     couponCode:coupon||'',attempts:attemptCount,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
   if(CONFIG.sheetUrl)
     fetch(CONFIG.sheetUrl+'?data='+encodeURIComponent(JSON.stringify(payload)),{mode:'no-cors'})
@@ -729,10 +730,10 @@ async function saveData(win,diff,coupon){
 
 /* ── GAME ── */
 let animFrame=null,gameOver=false,startTime=null,targetMs=null;
-const WIN_MS=30,MAX_MS=15000,AUTO_MISS=200;
+const WIN_MS=500,MAX_MS=15000,AUTO_MISS=600;
 
 function p2(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
-function p3(n){return String(Math.max(0,Math.floor(n)%1000)).padStart(3,'0')}
+function p2cs(n){return String(Math.max(0,Math.floor(n/10)%100)).padStart(2,'0')}
 
 function initGame(){
   gameOver=false;startTime=null;
@@ -745,9 +746,10 @@ function initGame(){
   document.getElementById('approachTxt').textContent='⏱ Timer running — stop at the right millisecond!';
   document.getElementById('swS').textContent='00';
   document.getElementById('swMs').textContent='000';
-  targetMs=Math.floor(Math.random()*9000)+5000;
-  document.getElementById('tS').textContent=p2(Math.floor(targetMs/1000));
-  document.getElementById('tMs').textContent=p3(targetMs);
+  const tSec=Math.floor(Math.random()*9)+5;
+  targetMs=tSec*1000;
+  document.getElementById('tS').textContent=p2(tSec);
+  document.getElementById('tMs').textContent='00';
   addRipple(document.getElementById('pressBtn'));
   startTime=performance.now();
   animFrame=requestAnimationFrame(gameLoop);
@@ -757,7 +759,7 @@ function gameLoop(){
   if(gameOver) return;
   const elapsed=performance.now()-startTime;
   document.getElementById('swS').textContent=p2(elapsed/1000);
-  document.getElementById('swMs').textContent=p3(elapsed);
+  document.getElementById('swMs').textContent=p2cs(elapsed);
 
   const diff=targetMs-elapsed;
   const atxt=document.getElementById('approachTxt');
@@ -801,7 +803,7 @@ function handlePress(){
   setTimeout(()=>{btn.style.transform='scale(1.05)';},120);
   setTimeout(()=>{btn.style.transform='';},240);
   document.getElementById('swS').textContent=p2(elapsed/1000);
-  document.getElementById('swMs').textContent=p3(elapsed);
+  document.getElementById('swMs').textContent=p2cs(elapsed);
   setTimeout(()=>showResult(win,elapsed,diff),290);
 }
 
