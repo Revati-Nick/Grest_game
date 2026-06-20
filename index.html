@@ -1117,7 +1117,8 @@ function showResult(win,elapsed,diff){
   else flash('rgba(239,68,68,.55)',380);
 
   const coupon=win?genCoupon(attemptCount):'';
-  saveData(win,Math.round(Math.abs(diff||0)),coupon);
+  const triesLeft=3-attemptCount;
+  if(win||triesLeft<=0) saveData(win,Math.round(Math.abs(diff||0)),coupon);
 
   setTimeout(()=>{
     const absDiff=Math.round(Math.abs(diff||0));
@@ -1130,7 +1131,6 @@ function showResult(win,elapsed,diff){
 
     const PRIZES=[600,400,200];
     const prizeAmt=PRIZES[Math.min(attemptCount-1,2)];
-    const triesLeft=3-attemptCount;
 
     const cEl=document.getElementById('rCoupon');
     if(win){
