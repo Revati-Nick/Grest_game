@@ -559,6 +559,7 @@ body::after{
         <div class="fprog-dot" id="pd3"></div>
         <div class="fprog-dot" id="pd4"></div>
         <div class="fprog-dot" id="pd5"></div>
+        <div class="fprog-dot" id="pd6"></div>
       </div>
 
       <div class="fgroup">
@@ -621,6 +622,28 @@ body::after{
           </select>
         </div>
         <div class="ferr" id="e-gender"><i class="ti ti-alert-circle-filled"></i><span></span></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel-row">
+          <label class="flabel" for="f-occupation">Occupation</label>
+          <span class="fstatus" id="fs-occupation"></span>
+        </div>
+        <div class="sel-wrap">
+          <select class="fselect" id="f-occupation" onchange="toggleOccupationOther()">
+            <option value="">Select Occupation</option>
+            <option value="student">Student</option>
+            <option value="salaried">Salaried</option>
+            <option value="self_employed">Self Employed</option>
+            <option value="business">Business</option>
+            <option value="homemaker">Homemaker</option>
+            <option value="retired">Retired</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="ferr" id="e-occupation"><i class="ti ti-alert-circle-filled"></i><span></span></div>
+        <input class="finput" id="f-occupation-other" type="text" placeholder="Please specify your occupation" style="margin-top:10px;display:none">
+        <div class="ferr" id="e-occupation-other"><i class="ti ti-alert-circle-filled"></i><span></span></div>
       </div>
 
       <button class="submit-btn rhost" onclick="submitForm()">Continue to Game →</button>
@@ -769,7 +792,7 @@ function goTo(n){
 }
 
 /* ── FORM ── */
-const FIELDS=['f-name','f-mobile','f-email','f-age','f-city','f-gender'];
+const FIELDS=['f-name','f-mobile','f-email','f-age','f-city','f-gender','f-occupation'];
 const done={};
 let playerData={}, attemptCount=0;
 
@@ -780,7 +803,17 @@ const rules={
   'f-age':   v=>{ if(!v) return 'Age is required'; const a=parseInt(v,10); if(isNaN(a)||a<18) return 'You must be 18 or older'; if(a>120) return 'Enter a valid age'; },
   'f-city':  v=>{ if(!v.trim()) return 'City is required'; },
   'f-gender':v=>{ if(!v) return 'Please select your gender'; },
+  'f-occupation':v=>{ if(!v) return 'Please select your occupation'; if(v==='other'){ const ov=document.getElementById('f-occupation-other').value.trim(); if(!ov) return 'Please specify your occupation'; } },
 };
+
+function toggleOccupationOther(){
+  const sel=document.getElementById('f-occupation');
+  const box=document.getElementById('f-occupation-other');
+  const show=sel.value==='other';
+  box.style.display=show?'block':'none';
+  if(!show) box.value='';
+  document.getElementById('e-occupation-other').classList.remove('on');
+}
 
 function validateOne(fid){
   const el=document.getElementById(fid),key=fid.slice(2);
@@ -829,7 +862,10 @@ function submitForm(){
       email:  document.getElementById('f-email').value.trim(),
       age:    parseInt(document.getElementById('f-age').value,10),
       city:   document.getElementById('f-city').value.trim(),
-      gender: document.getElementById('f-gender').value,
+      gender:      document.getElementById('f-gender').value,
+      occupation:  document.getElementById('f-occupation').value==='other'
+                   ? document.getElementById('f-occupation-other').value.trim()
+                   : document.getElementById('f-occupation').value,
     };
     goTo(3);
   }
@@ -842,9 +878,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   initRipples();
   FIELDS.forEach(fid=>{
     const el=document.getElementById(fid); if(!el) return;
-    el.addEventListener('blur',()=>{if(el.value||fid==='f-gender') validateOne(fid);});
+    el.addEventListener('blur',()=>{if(el.value||fid==='f-gender'||fid==='f-occupation') validateOne(fid);});
     el.addEventListener('input',()=>{if(done[fid]===false) validateOne(fid);});
   });
+  const otherBox=document.getElementById('f-occupation-other');
+  otherBox.addEventListener('input',()=>{if(done['f-occupation']===false) validateOne('f-occupation');});
+  otherBox.addEventListener('blur',()=>{ if(otherBox.value) validateOne('f-occupation'); });
 });
 
 /* ── PIN LOCK ── */
