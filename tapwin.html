@@ -609,6 +609,7 @@ body::after{
         <div class="fprog-dot" id="pd8"></div>
         <div class="fprog-dot" id="pd9"></div>
         <div class="fprog-dot" id="pd10"></div>
+        <div class="fprog-dot" id="pd11"></div>
       </div>
 
       <div class="fgroup">
@@ -890,7 +891,7 @@ function goTo(n){
 }
 
 /* ── FORM ── */
-const FIELDS=['f-name','f-mobile','f-email','f-age','f-city','f-gender','f-occupation','f-how-heard','f-location','f-company','f-feedback'];
+const FIELDS=['f-name','f-mobile','f-email','f-age','f-city','f-gender','f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'];
 const done={};
 let playerData={}, attemptCount=0;
 
@@ -906,6 +907,7 @@ const rules={
   'f-location':  v=>{ if(!v.trim()) return 'Location is required'; },
   'f-company':   v=>{ if(!v.trim()) return 'Company name is required'; },
   'f-feedback':  v=>{ if(!v) return 'Please rate your experience (1–5)'; },
+  'f-feedback-text': v=>{ if(!v.trim()) return 'Please share your feedback'; },
 };
 
 function setRating(n){
@@ -922,11 +924,13 @@ function openFeedbackModal(){
 }
 function closeFeedbackModal(){
   const rating=document.getElementById('f-feedback').value;
-  if(!rating){ validateOne('f-feedback'); return; }
-  const n=parseInt(rating,10);
   const text=(document.getElementById('f-feedback-text').value||'').trim();
+  if(!rating){ validateOne('f-feedback'); return; }
+  if(!text){ document.getElementById('f-feedback-text').focus(); return; }
+  done['f-feedback-text']=true; updateBar();
+  const n=parseInt(rating,10);
   const stars='★'.repeat(n)+'☆'.repeat(5-n);
-  const preview=text?' — "'+text.slice(0,28)+(text.length>28?'…':'')+'"':'';
+  const preview=' — "'+text.slice(0,28)+(text.length>28?'…':'')+'"';
   document.getElementById('feedbackSummary').textContent=stars+preview;
   document.getElementById('feedbackSummary').style.color='var(--text)';
   document.getElementById('feedbackModal').classList.remove('open');
@@ -1375,7 +1379,7 @@ function playAgain(){
       <button type="button" class="rating-btn" onclick="setRating(4)">4</button>
       <button type="button" class="rating-btn" onclick="setRating(5)">5</button>
     </div>
-    <textarea class="finput" id="f-feedback-text" rows="3" placeholder="Share your thoughts (optional)" style="resize:none;margin-top:16px"></textarea>
+    <textarea class="finput" id="f-feedback-text" rows="3" placeholder="Share your thoughts (required)" style="resize:none;margin-top:16px"></textarea>
     <button class="fb-done" onclick="closeFeedbackModal()">Done →</button>
   </div>
 </div>
