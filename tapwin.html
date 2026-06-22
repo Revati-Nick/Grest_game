@@ -955,12 +955,12 @@ function validateOne(fid){
   if(err){
     el.classList.add('bad');el.classList.remove('good');
     el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');
-    eEl.querySelector('span').textContent=err;eEl.classList.add('on');
+    if(eEl){eEl.querySelector('span').textContent=err;eEl.classList.add('on');}
     if(sEl){sEl.textContent='✕';sEl.className='fstatus bad';}
     done[fid]=false;
   } else {
     el.classList.remove('bad');el.classList.add('good');
-    eEl.classList.remove('on');
+    if(eEl) eEl.classList.remove('on');
     if(sEl){sEl.textContent='✓';sEl.className='fstatus ok';}
     done[fid]=true;
   }
