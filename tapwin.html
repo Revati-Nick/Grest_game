@@ -210,17 +210,50 @@ body::after{
 .ferr.on{display:flex}
 .ferr .ti{font-size:14px;flex-shrink:0}
 
-.rating-btns{display:flex;gap:8px;margin-top:4px}
+.rating-btns{display:flex;gap:12px;justify-content:center;margin:8px 0}
 .rating-btn{
-  flex:1;padding:14px 0;border-radius:12px;
-  border:1.5px solid rgba(233,39,81,.2);
+  width:54px;height:54px;border-radius:50%;
+  border:1.5px solid rgba(233,39,81,.25);
   background:#fafafa;font-size:20px;font-weight:800;color:var(--muted);
   cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .rating-btn.sel{background:var(--gradh);border-color:var(--acc);color:#fff;
   box-shadow:0 2px 14px rgba(233,39,81,.35)}
-.rating-btn:active{transform:scale(.92)}
-.feedback-textarea{resize:none;margin-top:10px}
+.rating-btn:active{transform:scale(.88)}
+
+.feedback-trigger{
+  display:flex;align-items:center;gap:12px;
+  padding:15px 18px;background:#fafafa;
+  border:1.5px solid rgba(15,15,26,.12);border-radius:14px;
+  cursor:pointer;transition:border-color .22s,box-shadow .22s;
+}
+.feedback-trigger:active{border-color:var(--acc);box-shadow:0 0 0 3.5px rgba(233,39,81,.15)}
+.feedback-trigger-icon{font-size:22px;color:var(--acc);flex-shrink:0}
+.feedback-trigger-txt{flex:1;font-size:15px;color:var(--muted)}
+.feedback-trigger-arrow{font-size:18px;color:var(--muted)}
+
+.fb-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(10px);
+  display:none;align-items:flex-end;justify-content:center;padding:0;
+}
+.fb-overlay.open{display:flex;animation:overlayIn .25s ease}
+.fb-box{
+  width:100%;max-width:580px;background:#fff;
+  border-radius:28px 28px 0 0;padding:36px 32px 48px;
+  box-shadow:0 -8px 48px rgba(0,0,0,.18);
+  animation:slideUp .3s cubic-bezier(.25,.46,.45,.94);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.fb-title{font-size:20px;font-weight:800;color:var(--acc);text-align:center;margin-bottom:4px}
+.fb-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px}
+.fb-done{
+  display:block;width:100%;padding:18px;margin-top:20px;
+  border-radius:100px;border:none;background:var(--gradh);
+  color:#fff;font-size:17px;font-weight:700;cursor:pointer;
+}
+.submit-btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none}
 
 .submit-btn{
   display:block;width:100%;padding:20px;margin-top:14px;
@@ -703,18 +736,15 @@ body::after{
           <span class="fstatus" id="fs-feedback"></span>
         </div>
         <input type="hidden" id="f-feedback">
-        <div class="rating-btns" id="ratingBtns">
-          <button type="button" class="rating-btn" onclick="setRating(1)">1</button>
-          <button type="button" class="rating-btn" onclick="setRating(2)">2</button>
-          <button type="button" class="rating-btn" onclick="setRating(3)">3</button>
-          <button type="button" class="rating-btn" onclick="setRating(4)">4</button>
-          <button type="button" class="rating-btn" onclick="setRating(5)">5</button>
+        <div class="feedback-trigger" onclick="openFeedbackModal()">
+          <i class="ti ti-star feedback-trigger-icon"></i>
+          <span class="feedback-trigger-txt" id="feedbackSummary">Tap to rate &amp; share feedback</span>
+          <i class="ti ti-chevron-right feedback-trigger-arrow"></i>
         </div>
         <div class="ferr" id="e-feedback"><i class="ti ti-alert-circle-filled"></i><span></span></div>
-        <textarea class="finput feedback-textarea" id="f-feedback-text" rows="3" placeholder="Share your thoughts (optional)"></textarea>
       </div>
 
-      <button class="submit-btn rhost" onclick="submitForm()">Continue to Game →</button>
+      <button class="submit-btn rhost" id="submitBtn" disabled onclick="submitForm()">Continue to Game →</button>
     </div>
   </main>
 </div>
@@ -881,12 +911,28 @@ const rules={
 function setRating(n){
   document.getElementById('f-feedback').value=n;
   document.querySelectorAll('.rating-btn').forEach((b,i)=>b.classList.toggle('sel',i<n));
-  if(done['f-feedback']===false) validateOne('f-feedback');
-  else { done['f-feedback']=true; updateBar();
-    const sEl=document.getElementById('fs-feedback');
-    if(sEl){sEl.textContent='✓';sEl.className='fstatus ok';}
-    document.getElementById('e-feedback').classList.remove('on');
-  }
+  done['f-feedback']=true; updateBar();
+  const sEl=document.getElementById('fs-feedback');
+  if(sEl){sEl.textContent='✓';sEl.className='fstatus ok';}
+  document.getElementById('e-feedback').classList.remove('on');
+}
+
+function openFeedbackModal(){
+  document.getElementById('feedbackModal').classList.add('open');
+}
+function closeFeedbackModal(){
+  const rating=document.getElementById('f-feedback').value;
+  if(!rating){ validateOne('f-feedback'); return; }
+  const n=parseInt(rating,10);
+  const text=(document.getElementById('f-feedback-text').value||'').trim();
+  const stars='★'.repeat(n)+'☆'.repeat(5-n);
+  const preview=text?' — "'+text.slice(0,28)+(text.length>28?'…':'')+'"':'';
+  document.getElementById('feedbackSummary').textContent=stars+preview;
+  document.getElementById('feedbackSummary').style.color='var(--text)';
+  document.getElementById('feedbackModal').classList.remove('open');
+}
+function fbBgClick(e){
+  if(e.target===document.getElementById('feedbackModal')) closeFeedbackModal();
 }
 
 function toggleOccupationOther(){
@@ -920,6 +966,8 @@ function validateOne(fid){
 function updateBar(){
   const n=FIELDS.filter(f=>done[f]).length;
   FIELDS.forEach((_,i)=>document.getElementById('pd'+i).classList.toggle('done',i<n));
+  const btn=document.getElementById('submitBtn');
+  if(btn){const ok=FIELDS.every(f=>done[f]);btn.disabled=!ok;btn.style.opacity=ok?'1':'.45';}
 }
 
 function submitForm(){
@@ -1148,7 +1196,15 @@ function handlePress(){
 }
 
 /* ── COUPON ── */
-function genCoupon(n){ return 'GREST'+(n<=1?'600':n===2?'400':'200'); }
+const STORE_PREFIX={'MG Road':'MG','CTST Road':'CT','Laxmi Nagar':'LN','Dwarka':'DW','Faridabad':'FB','INA':'IN'};
+function genCoupon(n){
+  const pfx=STORE_PREFIX[selectedStore]||'GR';
+  const val=n<=1?'600':n===2?'400':'200';
+  const seqKey='coupon_seq_'+pfx;
+  const seq=(parseInt(localStorage.getItem(seqKey)||'0',10)+1);
+  localStorage.setItem(seqKey,seq);
+  return pfx+val+'/'+seq;
+}
 
 /* ── AUTO RESET ── */
 let autoResetTimer=null;
@@ -1172,6 +1228,11 @@ function resetForNewPlayer(){
     if(sEl){sEl.textContent='';sEl.className='fstatus';}
     done[f]=false;
   });
+  document.querySelectorAll('.rating-btn').forEach(b=>b.classList.remove('sel'));
+  const fbS=document.getElementById('feedbackSummary');
+  if(fbS){fbS.textContent='Tap to rate & share feedback';fbS.style.color='';}
+  const fbTxt=document.getElementById('f-feedback-text');
+  if(fbTxt) fbTxt.value='';
   updateBar(); attemptCount=0; playerData={}; goTo(1); showPinOverlay();
 }
 
@@ -1301,5 +1362,22 @@ function playAgain(){
   initGame();
 }
 </script>
+
+<!-- ═══ FEEDBACK MODAL ═══ -->
+<div id="feedbackModal" class="fb-overlay" onclick="fbBgClick(event)">
+  <div class="fb-box">
+    <p class="fb-title">Rate Your Experience</p>
+    <p class="fb-sub">How would you rate Grest? (required)</p>
+    <div class="rating-btns">
+      <button type="button" class="rating-btn" onclick="setRating(1)">1</button>
+      <button type="button" class="rating-btn" onclick="setRating(2)">2</button>
+      <button type="button" class="rating-btn" onclick="setRating(3)">3</button>
+      <button type="button" class="rating-btn" onclick="setRating(4)">4</button>
+      <button type="button" class="rating-btn" onclick="setRating(5)">5</button>
+    </div>
+    <textarea class="finput" id="f-feedback-text" rows="3" placeholder="Share your thoughts (optional)" style="resize:none;margin-top:16px"></textarea>
+    <button class="fb-done" onclick="closeFeedbackModal()">Done →</button>
+  </div>
+</div>
 </body>
 </html>
