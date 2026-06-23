@@ -617,7 +617,7 @@ body::after{
           <label class="flabel" for="f-name">Full Name</label>
           <span class="fstatus" id="fs-name"></span>
         </div>
-        <input class="finput" id="f-name" type="text" placeholder="First and Last Name" autocomplete="name">
+        <input class="finput" id="f-name" type="text" placeholder="Your name" autocomplete="name">
         <div class="ferr" id="e-name"><i class="ti ti-alert-circle-filled"></i><span></span></div>
       </div>
 
@@ -650,15 +650,6 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-city">City</label>
-          <span class="fstatus" id="fs-city"></span>
-        </div>
-        <input class="finput" id="f-city" type="text" placeholder="Your city" autocomplete="address-level2">
-        <div class="ferr" id="e-city"><i class="ti ti-alert-circle-filled"></i><span></span></div>
-      </div>
-
-      <div class="fgroup">
-        <div class="flabel-row">
           <label class="flabel" for="f-gender">Gender</label>
           <span class="fstatus" id="fs-gender"></span>
         </div>
@@ -672,6 +663,15 @@ body::after{
           </select>
         </div>
         <div class="ferr" id="e-gender"><i class="ti ti-alert-circle-filled"></i><span></span></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel-row">
+          <label class="flabel" for="f-city">City</label>
+          <span class="fstatus" id="fs-city"></span>
+        </div>
+        <input class="finput" id="f-city" type="text" placeholder="Your city" autocomplete="address-level2">
+        <div class="ferr" id="e-city"><i class="ti ti-alert-circle-filled"></i><span></span></div>
       </div>
 
       <div class="fgroup">
@@ -891,23 +891,26 @@ function goTo(n){
 }
 
 /* ── FORM ── */
-const FIELDS=['f-name','f-mobile','f-email','f-age','f-city','f-gender','f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'];
+const REQUIRED_FIELDS=['f-name','f-mobile','f-email','f-age','f-gender','f-city'];
+const FIELDS=['f-name','f-mobile','f-email','f-age','f-gender','f-city','f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'];
 const done={};
+// pre-mark optional fields so they don't block submission
+['f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'].forEach(f=>done[f]=true);
 let playerData={}, attemptCount=0;
 
 const rules={
-  'f-name':  v=>{ const p=v.trim().split(/\s+/).filter(Boolean); if(!v.trim()) return 'Full name is required'; if(p.length<2) return 'Enter both first and last name'; },
+  'f-name':  v=>{ if(!v.trim()) return 'Name is required'; },
   'f-mobile':v=>{ if(!v.trim()) return 'Mobile number is required'; if(!/^[6-9]\d{9}$/.test(v.trim())) return 'Must be 10 digits starting with 6–9'; },
   'f-email': v=>{ if(!v.trim()) return 'Email is required'; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) return 'Enter a valid email address'; },
   'f-age':   v=>{ if(!v) return 'Age is required'; const a=parseInt(v,10); if(isNaN(a)||a<18) return 'You must be 18 or older'; if(a>120) return 'Enter a valid age'; },
-  'f-city':  v=>{ if(!v.trim()) return 'City is required'; },
   'f-gender':v=>{ if(!v) return 'Please select your gender'; },
-  'f-occupation': v=>{ if(!v) return 'Please select your occupation'; if(v==='other'){ const ov=document.getElementById('f-occupation-other').value.trim(); if(!ov) return 'Please specify your occupation'; } },
-  'f-how-heard': v=>{ if(!v) return 'Please tell us how you heard about Grest'; },
-  'f-location':  v=>{ if(!v.trim()) return 'Location is required'; },
-  'f-company':   v=>{ if(!v.trim()) return 'Company name is required'; },
-  'f-feedback':  v=>{ if(!v) return 'Please rate your experience (1–5)'; },
-  'f-feedback-text': v=>{ if(!v.trim()) return 'Please share your feedback'; },
+  'f-city':  v=>{ if(!v.trim()) return 'City is required'; },
+  'f-occupation': v=>{ if(v==='other'){ const ov=document.getElementById('f-occupation-other').value.trim(); if(!ov) return 'Please specify your occupation'; } },
+  'f-how-heard':  v=>{ },
+  'f-location':   v=>{ },
+  'f-company':    v=>{ },
+  'f-feedback':   v=>{ },
+  'f-feedback-text': v=>{ },
 };
 
 function setRating(n){
@@ -971,12 +974,12 @@ function updateBar(){
   const n=FIELDS.filter(f=>done[f]).length;
   FIELDS.forEach((_,i)=>document.getElementById('pd'+i).classList.toggle('done',i<n));
   const btn=document.getElementById('submitBtn');
-  if(btn){const ok=FIELDS.every(f=>done[f]);btn.disabled=!ok;btn.style.opacity=ok?'1':'.45';}
+  if(btn){const ok=REQUIRED_FIELDS.every(f=>done[f]);btn.disabled=!ok;btn.style.opacity=ok?'1':'.45';}
 }
 
 function submitForm(){
   let ok=true;
-  FIELDS.forEach(f=>{if(!validateOne(f)) ok=false;});
+  REQUIRED_FIELDS.forEach(f=>{if(!validateOne(f)) ok=false;});
   if(ok){
     const mob=document.getElementById('f-mobile').value.trim();
     const played=JSON.parse(localStorage.getItem('grest_played')||'[]');
