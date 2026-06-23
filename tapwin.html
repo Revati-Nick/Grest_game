@@ -167,6 +167,7 @@ body::after{
 .fgroup{margin-bottom:20px}
 .flabel-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .flabel{font-size:12px;font-weight:700;color:var(--acc);letter-spacing:.8px;text-transform:uppercase}
+.req::after{content:' *';color:var(--red);font-size:13px}
 .fstatus{font-size:15px;font-weight:800;opacity:0;transition:opacity .22s,transform .22s;transform:scale(.5)}
 .fstatus.ok {opacity:1;color:var(--green);transform:scale(1)}
 .fstatus.bad{opacity:1;color:var(--red);  transform:scale(1)}
@@ -614,7 +615,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-name">Full Name</label>
+          <label class="flabel req" for="f-name">Full Name</label>
           <span class="fstatus" id="fs-name"></span>
         </div>
         <input class="finput" id="f-name" type="text" placeholder="Your name" autocomplete="name">
@@ -623,7 +624,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-mobile">Mobile Number</label>
+          <label class="flabel req" for="f-mobile">Mobile Number</label>
           <span class="fstatus" id="fs-mobile"></span>
         </div>
         <input class="finput" id="f-mobile" type="tel" placeholder="10-digit Indian number" maxlength="10" inputmode="numeric">
@@ -632,7 +633,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-email">Email Address</label>
+          <label class="flabel req" for="f-email">Email Address</label>
           <span class="fstatus" id="fs-email"></span>
         </div>
         <input class="finput" id="f-email" type="email" placeholder="you@example.com" autocomplete="email">
@@ -641,7 +642,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-age">Age</label>
+          <label class="flabel req" for="f-age">Age</label>
           <span class="fstatus" id="fs-age"></span>
         </div>
         <input class="finput" id="f-age" type="number" placeholder="Must be 18 or above" min="1" max="120" inputmode="numeric">
@@ -650,7 +651,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-gender">Gender</label>
+          <label class="flabel req" for="f-gender">Gender</label>
           <span class="fstatus" id="fs-gender"></span>
         </div>
         <div class="sel-wrap">
@@ -667,7 +668,7 @@ body::after{
 
       <div class="fgroup">
         <div class="flabel-row">
-          <label class="flabel" for="f-city">City</label>
+          <label class="flabel req" for="f-city">City</label>
           <span class="fstatus" id="fs-city"></span>
         </div>
         <input class="finput" id="f-city" type="text" placeholder="Your city" autocomplete="address-level2">
