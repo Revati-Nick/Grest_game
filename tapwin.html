@@ -1112,7 +1112,7 @@ function showPinGrid(){
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
   const payload={...playerData,store:selectedStore,result:win?'win':'lose',
-    couponCode:coupon||'',timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
+    couponCode:coupon||'',timingDiff:diff||0,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
   if(CONFIG.sheetUrl)
     fetch(CONFIG.sheetUrl+'?data='+encodeURIComponent(JSON.stringify(payload)),{mode:'no-cors'})
       .catch(e=>console.warn('Sheets:',e));
