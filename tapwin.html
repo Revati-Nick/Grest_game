@@ -211,49 +211,6 @@ body::after{
 .ferr.on{display:flex}
 .ferr .ti{font-size:14px;flex-shrink:0}
 
-.rating-btns{display:flex;gap:12px;justify-content:center;margin:8px 0}
-.rating-btn{
-  width:54px;height:54px;border-radius:50%;
-  border:1.5px solid rgba(233,39,81,.25);
-  background:#fafafa;font-size:20px;font-weight:800;color:var(--muted);
-  cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.rating-btn.sel{background:var(--gradh);border-color:var(--acc);color:#fff;
-  box-shadow:0 2px 14px rgba(233,39,81,.35)}
-.rating-btn:active{transform:scale(.88)}
-
-.feedback-trigger{
-  display:flex;align-items:center;gap:12px;
-  padding:15px 18px;background:#fafafa;
-  border:1.5px solid rgba(15,15,26,.12);border-radius:14px;
-  cursor:pointer;transition:border-color .22s,box-shadow .22s;
-}
-.feedback-trigger:active{border-color:var(--acc);box-shadow:0 0 0 3.5px rgba(233,39,81,.15)}
-.feedback-trigger-icon{font-size:22px;color:var(--acc);flex-shrink:0}
-.feedback-trigger-txt{flex:1;font-size:15px;color:var(--muted)}
-.feedback-trigger-arrow{font-size:18px;color:var(--muted)}
-
-.fb-overlay{
-  position:fixed;inset:0;z-index:600;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(10px);
-  display:none;align-items:flex-end;justify-content:center;padding:0;
-}
-.fb-overlay.open{display:flex;animation:overlayIn .25s ease}
-.fb-box{
-  width:100%;max-width:580px;background:#fff;
-  border-radius:28px 28px 0 0;padding:36px 32px 48px;
-  box-shadow:0 -8px 48px rgba(0,0,0,.18);
-  animation:slideUp .3s cubic-bezier(.25,.46,.45,.94);
-}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.fb-title{font-size:20px;font-weight:800;color:var(--acc);text-align:center;margin-bottom:4px}
-.fb-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px}
-.fb-done{
-  display:block;width:100%;padding:18px;margin-top:20px;
-  border-radius:100px;border:none;background:var(--gradh);
-  color:#fff;font-size:17px;font-weight:700;cursor:pointer;
-}
 .submit-btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none}
 
 .submit-btn{
@@ -609,8 +566,6 @@ body::after{
         <div class="fprog-dot" id="pd7"></div>
         <div class="fprog-dot" id="pd8"></div>
         <div class="fprog-dot" id="pd9"></div>
-        <div class="fprog-dot" id="pd10"></div>
-        <div class="fprog-dot" id="pd11"></div>
       </div>
 
       <div class="fgroup">
@@ -732,19 +687,6 @@ body::after{
         <div class="ferr" id="e-company"><i class="ti ti-alert-circle-filled"></i><span></span></div>
       </div>
 
-      <div class="fgroup">
-        <div class="flabel-row">
-          <label class="flabel">Rate Your Experience</label>
-          <span class="fstatus" id="fs-feedback"></span>
-        </div>
-        <input type="hidden" id="f-feedback">
-        <div class="feedback-trigger" onclick="openFeedbackModal()">
-          <i class="ti ti-star feedback-trigger-icon"></i>
-          <span class="feedback-trigger-txt" id="feedbackSummary">Tap to rate &amp; share feedback</span>
-          <i class="ti ti-chevron-right feedback-trigger-arrow"></i>
-        </div>
-        <div class="ferr" id="e-feedback"><i class="ti ti-alert-circle-filled"></i><span></span></div>
-      </div>
 
       <button class="submit-btn rhost" id="submitBtn" disabled onclick="submitForm()">Continue to Game →</button>
     </div>
@@ -829,6 +771,7 @@ const CONFIG={
   mongoUrl:'',   // MongoDB Atlas Data API insertOne URL
   mongoKey:'',   // MongoDB API Key
   mongoDB:'tapwin', mongoCol:'players', mongoSrc:'Cluster0',
+  skipFormPin:'9999', // enter this PIN to skip registration form and go straight to game
 };
 
 /* ── LOSE MESSAGES ── */
@@ -893,10 +836,10 @@ function goTo(n){
 
 /* ── FORM ── */
 const REQUIRED_FIELDS=['f-name','f-mobile','f-email','f-age','f-gender','f-city'];
-const FIELDS=['f-name','f-mobile','f-email','f-age','f-gender','f-city','f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'];
+const FIELDS=['f-name','f-mobile','f-email','f-age','f-gender','f-city','f-occupation','f-how-heard','f-location','f-company'];
 const done={};
 // pre-mark optional fields so they don't block submission
-['f-occupation','f-how-heard','f-location','f-company','f-feedback','f-feedback-text'].forEach(f=>done[f]=true);
+['f-occupation','f-how-heard','f-location','f-company'].forEach(f=>done[f]=true);
 let playerData={}, attemptCount=0;
 
 const rules={
@@ -910,38 +853,8 @@ const rules={
   'f-how-heard':  v=>{ },
   'f-location':   v=>{ },
   'f-company':    v=>{ },
-  'f-feedback':   v=>{ },
-  'f-feedback-text': v=>{ },
 };
 
-function setRating(n){
-  document.getElementById('f-feedback').value=n;
-  document.querySelectorAll('.rating-btn').forEach((b,i)=>b.classList.toggle('sel',i<n));
-  done['f-feedback']=true; updateBar();
-  const sEl=document.getElementById('fs-feedback');
-  if(sEl){sEl.textContent='✓';sEl.className='fstatus ok';}
-  document.getElementById('e-feedback').classList.remove('on');
-}
-
-function openFeedbackModal(){
-  document.getElementById('feedbackModal').classList.add('open');
-}
-function closeFeedbackModal(){
-  const rating=document.getElementById('f-feedback').value;
-  const text=(document.getElementById('f-feedback-text').value||'').trim();
-  if(!rating){ validateOne('f-feedback'); return; }
-  if(!text){ document.getElementById('f-feedback-text').focus(); return; }
-  done['f-feedback-text']=true; updateBar();
-  const n=parseInt(rating,10);
-  const stars='★'.repeat(n)+'☆'.repeat(5-n);
-  const preview=' — "'+text.slice(0,28)+(text.length>28?'…':'')+'"';
-  document.getElementById('feedbackSummary').textContent=stars+preview;
-  document.getElementById('feedbackSummary').style.color='var(--text)';
-  document.getElementById('feedbackModal').classList.remove('open');
-}
-function fbBgClick(e){
-  if(e.target===document.getElementById('feedbackModal')) closeFeedbackModal();
-}
 
 function toggleOccupationOther(){
   const sel=document.getElementById('f-occupation');
@@ -1008,8 +921,6 @@ function submitForm(){
       howHeard:     document.getElementById('f-how-heard').value,
       location:     document.getElementById('f-location').value.trim(),
       company:      document.getElementById('f-company').value.trim(),
-      feedbackRating: parseInt(document.getElementById('f-feedback').value,10),
-      feedbackText:   document.getElementById('f-feedback-text').value.trim(),
     };
     goTo(3);
   }
@@ -1071,8 +982,22 @@ function pinKey(k){
 function updatePinDots(){
   document.querySelectorAll('.pd').forEach((d,i)=>d.classList.toggle('filled',i<pinEntry.length));
 }
+let skipFormMode=false;
+function isAuthValid(){
+  return localStorage.getItem('grest_auth_day')===new Date().toDateString();
+}
 function checkPin(){
+  if(CONFIG.skipFormPin && pinEntry===CONFIG.skipFormPin){
+    skipFormMode=true;
+    document.getElementById('pinOverlay').classList.add('hidden');
+    pinEntry=''; updatePinDots();
+    playerData={name:'Staff',mobile:'',email:'',age:'',city:'',gender:'',occupation:'',howHeard:'',location:'',company:''};
+    attemptCount=0; goTo(3);
+    return;
+  }
   if(pinEntry===STORE_PINS[selectedStore]){
+    localStorage.setItem('grest_auth_day', new Date().toDateString());
+    localStorage.setItem('grest_auth_store', selectedStore);
     document.getElementById('pinOverlay').classList.add('hidden');
     pinEntry=''; updatePinDots();
   } else {
@@ -1094,6 +1019,12 @@ function showPinOverlay(){
 
 /* ── FETCH PINS ── */
 async function loadStorePins(){
+  if(isAuthValid()){
+    const savedStore=localStorage.getItem('grest_auth_store');
+    if(savedStore) selectedStore=savedStore;
+    document.getElementById('pinOverlay').classList.add('hidden');
+    return;
+  }
   if(!CONFIG.sheetUrl) return showPinGrid();
   try{
     const r=await fetch(CONFIG.sheetUrl+'?action=pins');
@@ -1111,8 +1042,9 @@ function showPinGrid(){
 
 /* ── SAVE DATA ── */
 async function saveData(win,diff,coupon){
-  const PRIZES=[600,400,200];
-  const prizeAmt=win?PRIZES[Math.min(attemptCount-1,2)]:'';
+  if(skipFormMode) return;
+  const PRIZES=[1000,750,500,250];
+  const prizeAmt=win?PRIZES[Math.min(attemptCount-1,3)]:'';
   const payload={...playerData,store:selectedStore,result:win?'win':'lose',
     couponCode:coupon||'',prizeAmt:prizeAmt,timingDiff:diff||0,timestamp:new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false}).replace(',','')};
   if(CONFIG.sheetUrl)
@@ -1128,7 +1060,7 @@ async function saveData(win,diff,coupon){
 
 /* ── GAME ── */
 let animFrame=null,gameOver=false,startTime=null,targetMs=null;
-const WIN_MS_PER_TRY=[100,200,250],AUTO_MISS_PER_TRY=[300,450,600],MAX_MS=15000;
+const WIN_MS_PER_TRY=[100,200,300,400],AUTO_MISS_PER_TRY=[300,450,600,700],MAX_MS=15000;
 
 function p2(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
 function p2cs(n){return String(Math.max(0,Math.floor(n/10)%100)).padStart(2,'0')}
@@ -1175,12 +1107,12 @@ function gameLoop(){
     atxt.className='approach-txt critical';atxt.textContent='🔥 Any moment now...';
     card.className='target-card u2';
     btn.className='press-circle rhost fast';ring.className='press-ring fast';
-  } else if(diff>=-WIN_MS_PER_TRY[Math.min(attemptCount,2)]){
+  } else if(diff>=-WIN_MS_PER_TRY[Math.min(attemptCount,3)]){
     atxt.className='approach-txt now-txt';atxt.textContent='';
     card.className='target-card now';
     btn.className='press-circle rhost vfast';ring.className='press-ring fast';
   } else {
-    if(elapsed>targetMs+AUTO_MISS_PER_TRY[Math.min(attemptCount,2)]&&!gameOver){
+    if(elapsed>targetMs+AUTO_MISS_PER_TRY[Math.min(attemptCount,3)]&&!gameOver){
       gameOver=true;showResult(false,elapsed,elapsed-targetMs);return;
     }
     atxt.className='approach-txt critical';atxt.textContent='❌ Too slow!';
@@ -1195,7 +1127,7 @@ function handlePress(){
   attemptCount++;
   const elapsed=performance.now()-startTime;
   const diff=elapsed-targetMs;
-  const win=Math.abs(diff)<=WIN_MS_PER_TRY[Math.min(attemptCount-1,2)];
+  const win=Math.abs(diff)<=WIN_MS_PER_TRY[Math.min(attemptCount-1,3)];
   const btn=document.getElementById('pressBtn');
   btn.style.transform='scale(.86)';
   setTimeout(()=>{btn.style.transform='scale(1.05)';},120);
@@ -1209,7 +1141,7 @@ function handlePress(){
 const STORE_PREFIX={'MG Road':'MG','CTST Road':'CT','Laxmi Nagar':'LN','Dwarka':'DW','Faridabad':'FB','INA':'IN'};
 function genCoupon(n){
   const pfx=STORE_PREFIX[selectedStore]||'GR';
-  const val=n<=1?'600':n===2?'400':'200';
+  const val=n<=1?'1000':n===2?'750':n===3?'500':'250';
   const seqKey='coupon_seq_'+pfx;
   const seq=(parseInt(localStorage.getItem(seqKey)||'0',10)+1);
   localStorage.setItem(seqKey,seq);
@@ -1238,12 +1170,9 @@ function resetForNewPlayer(){
     if(sEl){sEl.textContent='';sEl.className='fstatus';}
     done[f]=false;
   });
-  document.querySelectorAll('.rating-btn').forEach(b=>b.classList.remove('sel'));
-  const fbS=document.getElementById('feedbackSummary');
-  if(fbS){fbS.textContent='Tap to rate & share feedback';fbS.style.color='';}
-  const fbTxt=document.getElementById('f-feedback-text');
-  if(fbTxt) fbTxt.value='';
-  updateBar(); attemptCount=0; playerData={}; goTo(1); showPinOverlay();
+  skipFormMode=false;
+  updateBar(); attemptCount=0; playerData={}; goTo(1);
+  if(!isAuthValid()) showPinOverlay();
 }
 
 /* ── SCRATCH CARD ── */
@@ -1316,7 +1245,7 @@ function showResult(win,elapsed,diff){
   else flash('rgba(239,68,68,.55)',380);
 
   const coupon=win?genCoupon(attemptCount):'';
-  const triesLeft=3-attemptCount;
+  const triesLeft=4-attemptCount;
   if(win||triesLeft<=0) saveData(win,Math.round(Math.abs(diff||0)),coupon);
 
   setTimeout(()=>{
@@ -1328,8 +1257,8 @@ function showResult(win,elapsed,diff){
     t.className='r-title '+(win?'win':'lose');
     t.textContent=win?'NAILED IT!':(late?'TOO LATE!':'TOO EARLY!');
 
-    const PRIZES=[600,400,200];
-    const prizeAmt=PRIZES[Math.min(attemptCount-1,2)];
+    const PRIZES=[1000,750,500,250];
+    const prizeAmt=PRIZES[Math.min(attemptCount-1,3)];
 
     const cEl=document.getElementById('rCoupon');
     if(win){
@@ -1355,7 +1284,7 @@ function showResult(win,elapsed,diff){
 
     document.getElementById('rSub').textContent=win
       ?'Show this coupon at the counter & get an exclusive discount on your Mobile or Laptop purchase!'
-      :(triesLeft>0?'Next try: \u00b1'+(WIN_MS_PER_TRY[Math.min(attemptCount,2)]/1000).toFixed(2)+'s window — anticipate, not react!':'Better luck next time! Visit us again.');
+      :(triesLeft>0?'Next try: \u00b1'+(WIN_MS_PER_TRY[Math.min(attemptCount,3)]/1000).toFixed(2)+'s window — anticipate, not react!':'Better luck next time! Visit us again.');
 
     const tryBtn=document.getElementById('tryAgainBtn');
     if(tryBtn) tryBtn.style.display=(!win&&triesLeft>0)?'inline-flex':'none';
@@ -1373,21 +1302,6 @@ function playAgain(){
 }
 </script>
 
-<!-- ═══ FEEDBACK MODAL ═══ -->
-<div id="feedbackModal" class="fb-overlay" onclick="fbBgClick(event)">
-  <div class="fb-box">
-    <p class="fb-title">Rate Your Experience</p>
-    <p class="fb-sub">How would you rate Grest? (required)</p>
-    <div class="rating-btns">
-      <button type="button" class="rating-btn" onclick="setRating(1)">1</button>
-      <button type="button" class="rating-btn" onclick="setRating(2)">2</button>
-      <button type="button" class="rating-btn" onclick="setRating(3)">3</button>
-      <button type="button" class="rating-btn" onclick="setRating(4)">4</button>
-      <button type="button" class="rating-btn" onclick="setRating(5)">5</button>
-    </div>
-    <textarea class="finput" id="f-feedback-text" rows="3" placeholder="Share your thoughts (required)" style="resize:none;margin-top:16px"></textarea>
-    <button class="fb-done" onclick="closeFeedbackModal()">Done →</button>
-  </div>
-</div>
+
 </body>
 </html>
